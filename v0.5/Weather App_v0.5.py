@@ -1,18 +1,17 @@
 import sys
 import os
-from pathlib import Path
 import requests
 from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
-                             QHBoxLayout, QGridLayout, QLineEdit, QMainWindow)
+                             QHBoxLayout, QLineEdit, QMainWindow)
 from PyQt5.QtGui import QIcon, QPixmap, QFont, QFontDatabase
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QSize
 
-files_path = Path('C:/Users/rodok/Desktop/program_files')
 
 class Weather_app(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('Weather App')
+        self.move(300, 100)
         self.setWindowIcon(QIcon('program_files/icon.png'))
         self.setMinimumWidth(900)
         flags = self.windowFlags()
@@ -23,8 +22,12 @@ class Weather_app(QMainWindow):
         self.central_widget.setObjectName('background_widget')
 
         self.line_edit = QLineEdit(self)
-        self.button = QPushButton('🔍', self)
+
+        self.button = QPushButton(self)
         self.button.setFixedSize(50, 50)
+        self.button.setIcon(QIcon('program_files/magnifying_glass.png'))
+        self.button.setIconSize(QSize(35, 35))
+
         self.result1 = QLabel(self)
         self.result2 = QLabel(self)
         self.result3 = QLabel(self)
@@ -41,10 +44,15 @@ class Weather_app(QMainWindow):
         self.pixmap = QPixmap()
         self.grey = 0
 
+        self.button.setMouseTracking(True)
+
         self.button.clicked.connect(self.on_button_clicked)
 
         self.initUI()
-        self.applyStyles()
+
+        bg_pic = 'bg_intro.png'
+
+        self.applyStyles(bg_pic)
 
     def initUI(self):
         main_vbox = self.central_widget.layout()
@@ -92,11 +100,11 @@ class Weather_app(QMainWindow):
 
         self.line_edit.setPlaceholderText('Enter location to get weather')
 
-    def applyStyles(self):
-        self.central_widget.setStyleSheet("""
-            #background_widget {
-                background-image: url(program_files/backgrounds/forest.png);
-            }
+    def applyStyles(self, bg_pic):
+        self.central_widget.setStyleSheet(f"""
+            #background_widget {{
+                background-image: url(program_files/backgrounds/{bg_pic});
+            }}
         """)
 
         self.setStyleSheet("""
@@ -105,17 +113,10 @@ class Weather_app(QMainWindow):
                 color: white;
                 border-radius: 10px;
                 padding: 12px;
-                background-color: rgba(60, 40, 60, 120);
+                background-color: rgba(50, 50, 50, 130);
             }
             QPushButton{
-                font-size: 35px;
                 background-color: transparent;
-            }
-            QPushButton:hover{
-                font-size: 38px;
-            }
-            QPushButton:pressed{
-                font-size: 30px;
             }
             QLabel{
                 font-size: 20px;
@@ -124,6 +125,11 @@ class Weather_app(QMainWindow):
             }
         """)
         
+        self.button.enterEvent = self.button_enter
+        self.button.leaveEvent = self.button_leave
+        self.button.pressed.connect(self.button_pressed)
+        self.button.released.connect(self.button_released)
+
         self.result1.setAlignment(Qt.AlignCenter)
         self.result1.setStyleSheet('font-family: arial; font-weight: bold;')
 
@@ -135,7 +141,7 @@ class Weather_app(QMainWindow):
         my_font = QFont(font_family, 150)
         self.result3.setFont(my_font)
 
-        bg_style = 'background-color: rgba(60, 40, 60, 120);' if self.grey == 1 else 'background-color: transparent;'
+        bg_style = 'background-color: rgba(50, 50, 50, 130);' if self.grey == 1 else 'background-color: transparent;'
         self.result3.setStyleSheet(f'font-size: 100px; border-radius: 10px; {bg_style}')
         
         self.result4.setAlignment(Qt.AlignCenter)
@@ -165,7 +171,8 @@ class Weather_app(QMainWindow):
         city_name = self.line_edit.text()
         if city_name:
             weather_info = self.get_weather_info(city_name)
-            self.applyStyles()
+            bg_pic = self.background(weather_info)
+            self.applyStyles(bg_pic)
             self.show_weather(city_name, weather_info)
 
     def get_weather_info(self, city_name):
@@ -207,7 +214,7 @@ class Weather_app(QMainWindow):
 
             self.result5.setText(f'Wind speed:        {weather_info['current']['wind_kph']} km/h | {weather_info['current']['wind_mph']} mi/h' + 
                                  '\n' + f'Air pressure:       {weather_info['current']['pressure_mb']} mbar | {weather_info['current']['pressure_in']} in Hg' + 
-                                 '\n' + f'Precipitation:      {weather_info['current']['precip_mm']} mm | {weather_info['current']['precip_in']} inch' + 
+                                 '\n' + f'Precipitation:       {weather_info['current']['precip_mm']} mm | {weather_info['current']['precip_in']} inch' + 
                                  '\n' + f'Humidity:             {weather_info['current']['humidity']}%' + 
                                  '\n' + f'UV Index:             {weather_info['current']['uv']}')
 
@@ -236,13 +243,15 @@ class Weather_app(QMainWindow):
                                   f'{weather_info['forecast']['forecastday'][2]['day']['maxtemp_c']}°C | {weather_info['forecast']['forecastday'][2]['day']['maxtemp_f']}°F' + '\n\n' + 
                                   f'{weather_info['forecast']['forecastday'][2]['day']['daily_chance_of_rain']}%')
             
-            self.result12.setText(f'{weather_info['forecast']['forecastday'][3]['date']}' + '\n\n\n' + 
-                                  f'{weather_info['forecast']['forecastday'][3]['day']['avgtemp_c']}°C | {weather_info['forecast']['forecastday'][3]['day']['avgtemp_f']}°F' + '\n\n' + 
-                                  f'{weather_info['forecast']['forecastday'][3]['day']['mintemp_c']}°C | {weather_info['forecast']['forecastday'][3]['day']['mintemp_f']}°F' + '\n' + 
-                                  f'{weather_info['forecast']['forecastday'][3]['day']['maxtemp_c']}°C | {weather_info['forecast']['forecastday'][3]['day']['maxtemp_f']}°F' + '\n\n' + 
-                                  f'{weather_info['forecast']['forecastday'][3]['day']['daily_chance_of_rain']}%')
-
-            print(weather_info)
+            try:              
+                self.result12.setText(f'{weather_info['forecast']['forecastday'][3]['date']}' + '\n\n\n' + 
+                                      f'{weather_info['forecast']['forecastday'][3]['day']['avgtemp_c']}°C | {weather_info['forecast']['forecastday'][3]['day']['avgtemp_f']}°F' + '\n\n' + 
+                                      f'{weather_info['forecast']['forecastday'][3]['day']['mintemp_c']}°C | {weather_info['forecast']['forecastday'][3]['day']['mintemp_f']}°F' + '\n' + 
+                                      f'{weather_info['forecast']['forecastday'][3]['day']['maxtemp_c']}°C | {weather_info['forecast']['forecastday'][3]['day']['maxtemp_f']}°F' + '\n\n' + 
+                                      f'{weather_info['forecast']['forecastday'][3]['day']['daily_chance_of_rain']}%')
+            except IndexError:
+                self.result12.setText('Forecast data\nunavailable\n(API key - free plan)')
+                
 
     def reset_labels(self):
         self.result1.clear()
@@ -264,9 +273,37 @@ class Weather_app(QMainWindow):
 
     def background(self, weather_info):
         if weather_info:
-            if weather_info['current']['is_day'] == 0: return 'bg_night.png'
-            else: return 'bg_night.png'
-        else: return 'intro.png'
+            if weather_info['current']['condition']['text'] in ('Mist', 'Fog', 'Freezing fog'): return 'bg_fog.png'
+            if weather_info['current']['condition']['text'] in ('Patchy rain nearby', 'Patchy rain possible', 'Patchy light drizzle', 'Light drizzle', 'Patchy light rain', 'Light rain', 'Moderate rain at times', 'Moderate rain', 'Heavy rain at times', 'Heavy rain', 'Light rain shower', 'Moderate or heavy rain shower', 'Torrential rain shower', 'Patchy freezing drizzle possible', 'Freezing drizzle', 'Heavy freezing drizzle', 'Light freezing rain', 'Moderate or heavy freezing rain'): return 'bg_rain.png'
+            if weather_info['current']['condition']['text'] in ('Patchy snow possible', 'Blowing snow', 'Blizzard', 'Patchy light snow', 'Light snow', 'Patchy moderate snow', 'Moderate snow', 'Patchy heavy snow', 'Heavy snow', 'Light snow showers', 'Moderate or heavy snow showers'): return 'bg_snowy.png'
+            if weather_info['current']['condition']['text'] in ('Patchy sleet possible', 'Light sleet', 'Moderate or heavy sleet', 'Ice pellets', 'Light sleet showers', 'Moderate or heavy sleet showers', 'Light showers of ice pellets', 'Moderate or heavy showers of ice pellets', ''): return 'bg_sleet.png'
+            if weather_info['current']['condition']['text'] in ('Thundery outbreaks possible', 'Patchy light rain with thunder', 'Moderate or heavy rain with thunder', 'Patchy light snow with thunder', 'Moderate or heavy snow with thunder'): return 'bg_thunder.png'
+
+            if weather_info['current']['is_day'] == 0:
+                if weather_info['current']['feelslike_c'] >= 35:
+                    if weather_info['current']['condition']['text'] in ('Clear', 'Partly Cloudy', 'Partly cloudy'): return 'bg_canyon_night.png'
+                    if weather_info['current']['condition']['text'] in ('Cloudy', 'Overcast'): return 'bg_red_night.png'
+                if 5 <= weather_info['current']['feelslike_c'] < 35:
+                    if weather_info['current']['condition']['text'] in ('Clear', 'Partly Cloudy', 'Partly cloudy'): return 'bg_night.png'
+                    if weather_info['current']['condition']['text'] in ('Cloudy', 'Overcast'): return 'bg_cloudy_night.png'
+                if -30 < weather_info['current']['feelslike_c'] < 5:
+                    if weather_info['current']['condition']['text'] in ('Clear', 'Partly Cloudy', 'Partly cloudy'): return 'bg_snowy_clear.png'
+                    if weather_info['current']['condition']['text'] in ('Cloudy', 'Overcast'): return 'bg_cold_town.png'
+                if weather_info['current']['feelslike_c'] <= -30: return 'bg_arctic.png'
+
+            if weather_info['current']['is_day'] == 1:
+                if weather_info['current']['feelslike_c'] >= 35:
+                    if weather_info['current']['condition']['text'] in ('Clear', 'Sunny', 'Partly Cloudy', 'Partly cloudy'): return 'bg_hot_clear.png'
+                    if weather_info['current']['condition']['text'] in ('Cloudy', 'Overcast'): return 'bg_rainforest.png'
+                if 5 <= weather_info['current']['feelslike_c'] < 35:
+                    if weather_info['current']['condition']['text'] in ('Clear', 'Sunny', 'Partly Cloudy', 'Partly cloudy'): return 'bg_deciduousforest.png'
+                    if weather_info['current']['condition']['text'] in ('Cloudy', 'Overcast'): return 'bg_cloudy.png'
+                if -30 < weather_info['current']['feelslike_c'] < 5:
+                    if weather_info['current']['condition']['text'] in ('Clear', 'Sunny', 'Partly Cloudy', 'Partly cloudy'): return 'bg_village.png'
+                    if weather_info['current']['condition']['text'] in ('Cloudy', 'Overcast'): return 'bg_sphinx.png'
+                if weather_info['current']['feelslike_c'] <= -30: return 'bg_antarctica.png'
+
+        else: return 'bg_error.png'
 
     def advice(self, weather_info):
         message = ''
@@ -308,6 +345,18 @@ class Weather_app(QMainWindow):
 
         self.setMinimumSize(self.size())
         self.setMaximumSize(self.size())
+
+    def button_enter(self, event):
+        self.button.setIconSize(QSize(40, 40))
+
+    def button_leave(self, event):
+        self.button.setIconSize(QSize(35, 35))
+
+    def button_pressed(self):
+        self.button.setIconSize(QSize(28, 28))
+
+    def button_released(self):
+        self.button.setIconSize(QSize(35, 35))
 
 
 def main():
