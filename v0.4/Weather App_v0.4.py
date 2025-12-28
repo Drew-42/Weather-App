@@ -1,16 +1,22 @@
 import sys
+import os
+from pathlib import Path
 import requests
 from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLayout,
                              QHBoxLayout, QGridLayout, QLineEdit, QMainWindow)
 from PyQt5.QtGui import QIcon, QPixmap, QFont, QFontDatabase
 from PyQt5.QtCore import Qt
 
+files_path = Path('C:/Users/rodok/Desktop/program_files')
+
 class Weather_app(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle('Weather App')
-        self.setWindowIcon(QIcon('icon.png'))
-        self.setFixedSize(900, 600)
+        self.setWindowIcon(QIcon('program_files/icon.png'))
+        self.setMinimumWidth(900)
+        flags = self.windowFlags()
+        self.setWindowFlags(flags & ~Qt.WindowMaximizeButtonHint)
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -26,6 +32,12 @@ class Weather_app(QMainWindow):
         self.result5 = QLabel(self)
         self.result6 = QLabel(self)
         self.result7 = QLabel(self)
+        self.result8 = QLabel(self)
+        self.result9 = QLabel(self)
+        self.result10 = QLabel(self)
+        self.result11 = QLabel(self)
+        self.result12 = QLabel(self)
+
         self.pixmap = QPixmap()
         self.grey = 0
 
@@ -35,12 +47,6 @@ class Weather_app(QMainWindow):
         self.applyStyles()
 
     def initUI(self):
-        self.central_widget.setStyleSheet("""
-            #background_widget {
-                background-image: url(wallpaper.png);
-            }
-        """)
-
         main_vbox = self.central_widget.layout()
         if main_vbox is None:
             main_vbox = QVBoxLayout(self.central_widget)
@@ -55,6 +61,8 @@ class Weather_app(QMainWindow):
         main_vbox.addWidget(self.result1)
         main_vbox.addWidget(self.result2)
 
+        main_vbox.addSpacing(50)
+
         hbox2 = QHBoxLayout()
         hbox2.addWidget(self.result3)
         hbox2.addWidget(self.result4)
@@ -67,17 +75,37 @@ class Weather_app(QMainWindow):
         main_vbox.addLayout(hbox3)
         main_vbox.addWidget(self.result7)
 
+        main_vbox.addSpacing(50)
+
+        main_vbox.addStretch(1)
+
+        hbox4 = QHBoxLayout()
+        hbox4.addWidget(self.result8)
+        hbox4.addWidget(self.result9)
+        hbox4.addWidget(self.result10)
+        hbox4.addWidget(self.result11)
+        hbox4.addWidget(self.result12)
+
+        main_vbox.addLayout(hbox4)
+
         main_vbox.setSpacing(5)
+
         self.line_edit.setPlaceholderText('Enter location to get weather')
 
     def applyStyles(self):
+        self.central_widget.setStyleSheet("""
+            #background_widget {
+                background-image: url(program_files/backgrounds/forest.png);
+            }
+        """)
+
         self.setStyleSheet("""
             QLineEdit{
                 font-size: 30px;
                 color: white;
                 border-radius: 10px;
                 padding: 12px;
-                background-color: rgba(0, 0, 20, 100);
+                background-color: rgba(60, 40, 60, 120);
             }
             QPushButton{
                 font-size: 35px;
@@ -102,45 +130,56 @@ class Weather_app(QMainWindow):
         self.result2.setAlignment(Qt.AlignCenter)
         self.result2.setStyleSheet('font-size: 15px;')
 
-        font_id = QFontDatabase.addApplicationFont('Heathergreen.otf')
+        font_id = QFontDatabase.addApplicationFont('program_files/Heathergreen.otf')
         font_family = QFontDatabase.applicationFontFamilies(font_id)[0]
         my_font = QFont(font_family, 150)
         self.result3.setFont(my_font)
 
-        bg_style = 'background-color: rgba(0, 0, 20, 100);' if self.grey == 1 else 'background-color: transparent;'
+        bg_style = 'background-color: rgba(60, 40, 60, 120);' if self.grey == 1 else 'background-color: transparent;'
         self.result3.setStyleSheet(f'font-size: 100px; border-radius: 10px; {bg_style}')
         
         self.result4.setAlignment(Qt.AlignCenter)
-        self.result4.setStyleSheet(f'background-color: transparent')
         
         self.result5.setStyleSheet(f'font-size: 20px; font-family: arial; font-weight: bold; border-radius: 10px; {bg_style}')
       
         self.result6.setAlignment(Qt.AlignCenter)
-        self.result6.setStyleSheet('font-size: 15px; font-family: arial; font-weight: bold; background-color: transparent; border-radius: 10px;')
+        self.result6.setStyleSheet('font-size: 15px; font-family: arial; font-weight: bold; border-radius: 10px;')
        
         self.result7.setStyleSheet('font-size: 15px;')
 
+        self.result8.setStyleSheet(f'font-size: 20px; font-family: arial; font-weight: bold; border-radius: 10px;')
+        
+        self.result9.setAlignment(Qt.AlignCenter)
+        self.result9.setStyleSheet(f'font-size: 20px; font-family: arial; font-weight: bold; border-radius: 10px; {bg_style}')
+       
+        self.result10.setAlignment(Qt.AlignCenter)
+        self.result10.setStyleSheet(f'font-size: 20px; font-family: arial; font-weight: bold; border-radius: 10px; {bg_style}')
+       
+        self.result11.setAlignment(Qt.AlignCenter)
+        self.result11.setStyleSheet(f'font-size: 20px; font-family: arial; font-weight: bold; border-radius: 10px; {bg_style}')
+
+        self.result12.setAlignment(Qt.AlignCenter)
+        self.result12.setStyleSheet(f'font-size: 20px; font-family: arial; font-weight: bold; border-radius: 10px; {bg_style}')
 
     def on_button_clicked(self):
         city_name = self.line_edit.text()
         if city_name:
             weather_info = self.get_weather_info(city_name)
+            self.applyStyles()
             self.show_weather(city_name, weather_info)
 
-    def get_weather_info(self, text):
-        url = f'http://api.weatherapi.com/v1/current.json?key=d0a66f3e42844fed973212014252011&q={text}'
+    def get_weather_info(self, city_name):
+        url = f'http://api.weatherapi.com/v1/forecast.json?key=d0a66f3e42844fed973212014252011&q={city_name}&days=4'
         response = requests.get(url)
 
         self.reset_labels()
 
         if response.status_code == 200:
             self.grey = 1
-            self.applyStyles()
             weather_data = response.json()
             return weather_data
         else:
             self.grey = 0
-            self.applyStyles()
 
             if response.status_code == 400:
                 description = 'Invalid request/url or internal application error'
@@ -159,10 +198,10 @@ class Weather_app(QMainWindow):
     def show_weather(self, text, weather_info):
         if weather_info:
             self.result1.setText(f'{weather_info['location']['name']}, {weather_info['location']['country']}')
-            self.result2.setText(f'{weather_info['location']['localtime']}' + '\n\n')
+            self.result2.setText(f'{weather_info['location']['localtime']}')
             
             self.get_set_image(weather_info)
-            self.result4.setPixmap(self.pixmap.scaled(200, 200))
+            self.result4.setPixmap(self.pixmap.scaled(150, 150))
             
             self.result3.setText(f'{weather_info['current']['temp_c']}°C | {weather_info['current']['temp_f']}°F')
 
@@ -172,9 +211,37 @@ class Weather_app(QMainWindow):
                                  '\n' + f'Humidity:             {weather_info['current']['humidity']}%' + 
                                  '\n' + f'UV Index:             {weather_info['current']['uv']}')
 
-            self.result6.setText('Weather condition:' + '\n' + f'{weather_info['current']['condition']['text']}')
-            self.result7.setText('\n' + f'Advice:{self.advice(weather_info)}')
+            self.result6.setText('Weather condition:' + '\n' + f'{weather_info['current']['condition']['text']}' + '\n\n' + 
+                                f'Moon phase: {weather_info['forecast']['forecastday'][0]['astro']['moon_phase']} {self.moon_phase(weather_info)}')
             
+            self.result7.setText(f'Advice:{self.advice(weather_info)}')
+
+            self.result8.setText('\n\n\n' + 'Med. temp. 🌡:' + '\n\n' + 'Min. temp. 🌡❄:' + '\n' + 'Max. temp. 🌡🔥:' + '\n\n' + 'Chance of rain ☂:')
+
+            self.result9.setText(f'{weather_info['forecast']['forecastday'][0]['date']}' + '\n' + '(today)' + '\n\n' + 
+                                f'{weather_info['forecast']['forecastday'][0]['day']['avgtemp_c']}°C | {weather_info['forecast']['forecastday'][0]['day']['avgtemp_f']}°F' + '\n\n' + 
+                                f'{weather_info['forecast']['forecastday'][0]['day']['mintemp_c']}°C | {weather_info['forecast']['forecastday'][0]['day']['mintemp_f']}°F' + '\n' + 
+                                f'{weather_info['forecast']['forecastday'][0]['day']['maxtemp_c']}°C | {weather_info['forecast']['forecastday'][0]['day']['maxtemp_f']}°F' + '\n\n' + 
+                                f'{weather_info['forecast']['forecastday'][0]['day']['daily_chance_of_rain']}%')
+           
+            self.result10.setText(f'{weather_info['forecast']['forecastday'][1]['date']}' + '\n' + '(tomorrow)' + '\n\n' + 
+                                  f'{weather_info['forecast']['forecastday'][1]['day']['avgtemp_c']}°C | {weather_info['forecast']['forecastday'][1]['day']['avgtemp_f']}°F' + '\n\n' + 
+                                  f'{weather_info['forecast']['forecastday'][1]['day']['mintemp_c']}°C | {weather_info['forecast']['forecastday'][1]['day']['mintemp_f']}°F' + '\n' + 
+                                  f'{weather_info['forecast']['forecastday'][1]['day']['maxtemp_c']}°C | {weather_info['forecast']['forecastday'][1]['day']['maxtemp_f']}°F' + '\n\n' + 
+                                  f'{weather_info['forecast']['forecastday'][1]['day']['daily_chance_of_rain']}%')
+         
+            self.result11.setText(f'{weather_info['forecast']['forecastday'][2]['date']}' + '\n' + '(overmorrow)' + '\n\n' + 
+                                  f'{weather_info['forecast']['forecastday'][2]['day']['avgtemp_c']}°C | {weather_info['forecast']['forecastday'][2]['day']['avgtemp_f']}°F' + '\n\n' + 
+                                  f'{weather_info['forecast']['forecastday'][2]['day']['mintemp_c']}°C | {weather_info['forecast']['forecastday'][2]['day']['mintemp_f']}°F' + '\n' + 
+                                  f'{weather_info['forecast']['forecastday'][2]['day']['maxtemp_c']}°C | {weather_info['forecast']['forecastday'][2]['day']['maxtemp_f']}°F' + '\n\n' + 
+                                  f'{weather_info['forecast']['forecastday'][2]['day']['daily_chance_of_rain']}%')
+            
+            self.result12.setText(f'{weather_info['forecast']['forecastday'][3]['date']}' + '\n\n\n' + 
+                                  f'{weather_info['forecast']['forecastday'][3]['day']['avgtemp_c']}°C | {weather_info['forecast']['forecastday'][3]['day']['avgtemp_f']}°F' + '\n\n' + 
+                                  f'{weather_info['forecast']['forecastday'][3]['day']['mintemp_c']}°C | {weather_info['forecast']['forecastday'][3]['day']['mintemp_f']}°F' + '\n' + 
+                                  f'{weather_info['forecast']['forecastday'][3]['day']['maxtemp_c']}°C | {weather_info['forecast']['forecastday'][3]['day']['maxtemp_f']}°F' + '\n\n' + 
+                                  f'{weather_info['forecast']['forecastday'][3]['day']['daily_chance_of_rain']}%')
+
             print(weather_info)
 
     def reset_labels(self):
@@ -185,10 +252,21 @@ class Weather_app(QMainWindow):
         self.result5.clear()
         self.result6.clear()
         self.result7.clear()
+        self.result8.clear()
+        self.result9.clear()
+        self.result10.clear()
+        self.result11.clear()
+        self.result12.clear()
 
     def get_set_image(self, weather_info):
         request_image = requests.get(f'https:{weather_info['current']['condition']['icon']}')
         self.pixmap.loadFromData(request_image.content)
+
+    def background(self, weather_info):
+        if weather_info:
+            if weather_info['current']['is_day'] == 0: return 'bg_night.png'
+            else: return 'bg_night.png'
+        else: return 'intro.png'
 
     def advice(self, weather_info):
         message = ''
@@ -202,6 +280,16 @@ class Weather_app(QMainWindow):
         if weather_info['current']['uv'] >= 3: message += '\n' + '* Use sunscreen'
         return message if message else ' none'
 
+    def moon_phase(self, weather_info):
+        if weather_info['forecast']['forecastday'][0]['astro']['moon_phase'] == 'New Moon': return '🌑'
+        if weather_info['forecast']['forecastday'][0]['astro']['moon_phase'] == 'Waxing Crescent': return '🌒'
+        if weather_info['forecast']['forecastday'][0]['astro']['moon_phase'] == 'First Quarter': return '🌓'
+        if weather_info['forecast']['forecastday'][0]['astro']['moon_phase'] == 'Waxing Gibbous': return '🌔'
+        if weather_info['forecast']['forecastday'][0]['astro']['moon_phase'] == 'Full Moon': return '🌕'
+        if weather_info['forecast']['forecastday'][0]['astro']['moon_phase'] == 'Waning Gibbous': return '🌖'
+        if weather_info['forecast']['forecastday'][0]['astro']['moon_phase'] == 'Last Quarter': return '🌗'
+        if weather_info['forecast']['forecastday'][0]['astro']['moon_phase'] == 'Waning Crescent': return '🌑'
+        else: return 'unknown'
 
     def delete_layout(self, layout_to_clear):
         if layout_to_clear is not None:
@@ -212,6 +300,15 @@ class Weather_app(QMainWindow):
                 elif item.layout() is not None:
                     self.delete_layout(item.layout())
                 del item
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        
+        self.adjustSize()
+
+        self.setMinimumSize(self.size())
+        self.setMaximumSize(self.size())
+
 
 def main():
     app = QApplication(sys.argv)
