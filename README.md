@@ -1,5 +1,5 @@
 # Weather App
-An application that shows the current weather and the forecast of any place in the world
+An application that shows the current weather and the forecast at any place in the world
 
 As soon as the app opens, the user is free to type in the name of any location on Earth and then click on the little magnifying glass on the right.
 
