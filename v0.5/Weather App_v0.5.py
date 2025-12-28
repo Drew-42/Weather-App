@@ -6,6 +6,8 @@ from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, QVBoxLa
 from PyQt5.QtGui import QIcon, QPixmap, QFont, QFontDatabase
 from PyQt5.QtCore import Qt, QSize
 
+# Defining the class of this app, that contains all the functions and preperties of the
+# application:
 
 class Weather_app(QMainWindow):
     def __init__(self):
@@ -55,11 +57,12 @@ class Weather_app(QMainWindow):
         self.applyStyles(bg_pic)
 
     def initUI(self):
+
+# Defining the layout of the window:
+
         main_vbox = self.central_widget.layout()
         if main_vbox is None:
             main_vbox = QVBoxLayout(self.central_widget)
-
-        self.delete_layout(main_vbox) 
         
         hbox1 = QHBoxLayout()
         hbox1.addWidget(self.line_edit)
@@ -99,6 +102,8 @@ class Weather_app(QMainWindow):
         main_vbox.setSpacing(5)
 
         self.line_edit.setPlaceholderText('Enter location to get weather')
+
+# Defining the appearence of the window's contents, based on search results:
 
     def applyStyles(self, bg_pic):
         self.central_widget.setStyleSheet(f"""
@@ -167,6 +172,8 @@ class Weather_app(QMainWindow):
         self.result12.setAlignment(Qt.AlignCenter)
         self.result12.setStyleSheet(f'font-size: 20px; font-family: arial; font-weight: bold; border-radius: 10px; {bg_style}')
 
+# The methods that describe what the program can do:
+
     def on_button_clicked(self):
         city_name = self.line_edit.text()
         if city_name:
@@ -175,6 +182,8 @@ class Weather_app(QMainWindow):
             self.applyStyles(bg_pic)
             self.show_weather(city_name, weather_info)
 
+# This is the method that fetches data from the weather API. The key in 
+# the url can be easily changed
     def get_weather_info(self, city_name):
         url = f'http://api.weatherapi.com/v1/forecast.json?key=d0a66f3e42844fed973212014252011&q={city_name}&days=4'
         response = requests.get(url)
@@ -202,6 +211,7 @@ class Weather_app(QMainWindow):
                                 f'Description: {description}')
             return None
 
+# This method prints the weather data within the window's labels
     def show_weather(self, text, weather_info):
         if weather_info:
             self.result1.setText(f'{weather_info['location']['name']}, {weather_info['location']['country']}')
@@ -267,10 +277,13 @@ class Weather_app(QMainWindow):
         self.result11.clear()
         self.result12.clear()
 
+# This method showcases an image that represents the state of the weather
     def get_set_image(self, weather_info):
         request_image = requests.get(f'https:{weather_info['current']['condition']['icon']}')
         self.pixmap.loadFromData(request_image.content)
 
+# This method establishes what background picture will be displayed based on the weather
+# condition
     def background(self, weather_info):
         if weather_info:
             if weather_info['current']['condition']['text'] in ('Mist', 'Fog', 'Freezing fog'): return 'bg_fog.png'
@@ -305,6 +318,7 @@ class Weather_app(QMainWindow):
 
         else: return 'bg_error.png'
 
+# This method establishes which advice to be displayed based on the weather condition
     def advice(self, weather_info):
         message = ''
         if weather_info['current']['precip_mm'] > 0: message += '\n' + '* Take an umbrella!'
@@ -317,6 +331,7 @@ class Weather_app(QMainWindow):
         if weather_info['current']['uv'] >= 3: message += '\n' + '* Use sunscreen'
         return message if message else ' none'
 
+# This method establishes which moon phase to be displayed
     def moon_phase(self, weather_info):
         if weather_info['forecast']['forecastday'][0]['astro']['moon_phase'] == 'New Moon': return '🌑'
         if weather_info['forecast']['forecastday'][0]['astro']['moon_phase'] == 'Waxing Crescent': return '🌒'
@@ -327,16 +342,6 @@ class Weather_app(QMainWindow):
         if weather_info['forecast']['forecastday'][0]['astro']['moon_phase'] == 'Last Quarter': return '🌗'
         if weather_info['forecast']['forecastday'][0]['astro']['moon_phase'] == 'Waning Crescent': return '🌑'
         else: return 'unknown'
-
-    def delete_layout(self, layout_to_clear):
-        if layout_to_clear is not None:
-            while layout_to_clear.count():
-                item = layout_to_clear.takeAt(0)
-                if item.widget() is not None:
-                    item.widget().deleteLater()
-                elif item.layout() is not None:
-                    self.delete_layout(item.layout())
-                del item
 
     def showEvent(self, event):
         super().showEvent(event)
@@ -358,6 +363,8 @@ class Weather_app(QMainWindow):
     def button_released(self):
         self.button.setIconSize(QSize(35, 35))
 
+
+# The main code of the app:
 
 def main():
     app = QApplication(sys.argv)
