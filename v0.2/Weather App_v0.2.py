@@ -1,18 +1,25 @@
 import sys
 import requests
-from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QPushButton, 
-							 QVBoxLayout, QHBoxLayout, QLineEdit)
+from PyQt5.QtWidgets import (QApplication, QWidget, QLabel, QPushButton,QVBoxLayout, 
+							 QHBoxLayout, QGridLayout, QLineEdit, QMainWindow)
 from PyQt5.QtGui import QIcon, QPixmap
 from PyQt5.QtCore import Qt
 
-class Weather_app(QWidget):
+class Weather_app(QMainWindow):
 	def __init__(self):
 		super().__init__()
 		self.setWindowTitle('Weather App')
 		self.setWindowIcon(QIcon('icon.png'))
+		self.setFixedSize(600, 600)
+
+		self.central_widget = QWidget()
+		self.setCentralWidget(self.central_widget)
+		self.central_widget.setObjectName('background_widget')
 
 		self.line_edit = QLineEdit(self)
-		self.button = QPushButton('Get Weather', self)
+		self.button = QPushButton('🔍', self)
+		self.button.setFixedSize(50, 50)
+		self.background = QLabel(self)
 		self.result1 = QLabel(self)
 		self.result2 = QLabel(self)
 		self.result3 = QLabel(self)
@@ -22,8 +29,14 @@ class Weather_app(QWidget):
 		self.initUI()
 
 	def initUI(self):
-		vbox = QVBoxLayout()
-		self.setLayout(vbox)
+		self.central_widget.setStyleSheet("""
+        	#background_widget {
+            	background-image: url(wallpaper.jpg);
+            	background-repeat: no-repeat;
+            }
+        """)
+
+		vbox = QVBoxLayout(self.central_widget)
 
 		hbox = QHBoxLayout()
 		hbox.addWidget(self.line_edit)
@@ -43,26 +56,37 @@ class Weather_app(QWidget):
 
 		self.setStyleSheet("""
 			QLineEdit, QLabel, QPushButton{
-				font-family: calibri;
+				font-family: cooper;
+				font-weight: bold;
 			}
 			QLineEdit{
 				font-size: 30px;
+				color: white;
+				border-radius: 10px;
+				padding: 12px;
+				background-color: rgba(0, 0, 0, 100);
 			}
 			QPushButton{
-				font-size: 22px;
-				font-weight: bold;
-				padding: 8px;
+				font-size: 35px;
+				background-color: transparent;
+			}
+			QPushButton:hover{
+				font-size: 38px;
+			}
+			QPushButton:pressed{
+				font-size: 30px;
 			}
 			QLabel{
 				font-size: 25px;
 				padding: 10px;
+				color: white;
 			}
 		""")
 
-		self.result1.setStyleSheet('font-size: 18px; color: red;')
-		self.result5.setStyleSheet('font-size: 25px; color: red;')
+		self.result2.setStyleSheet('font-size: 18px;')
+		self.result5.setStyleSheet('font-size: 20px;')
 
-		self.line_edit.setPlaceholderText('Enter location')
+		self.line_edit.setPlaceholderText('Enter location to get weather')
 
 		self.button.clicked.connect(self.get_weather_button)
 
@@ -87,7 +111,7 @@ class Weather_app(QWidget):
 			if response.status_code == 403:
 				description = 'API key has exceeded calls per month quota/has been disabled/API key can\'t access to resource'
 
-			self.result1.setText('Error: Failed to retrieve data' + '\n' + 
+			self.result2.setText('Error: Failed to retrieve data' + '\n' + 
 				                f'HTTP Status Code: {response.status_code}' + '\n' + 
 			                    f'Description: {description}')
 
@@ -95,8 +119,9 @@ class Weather_app(QWidget):
 		weather_info = self.get_weather_info(text)
 		
 		if weather_info:
-			self.result2.setText(f'Location: {weather_info['location']['name']}, {weather_info['location']['country']}' 
-				+ '\n' + f'Local time: {weather_info['location']['localtime']}')
+			self.result1.setText(f'{weather_info['location']['name']}, {weather_info['location']['country']}')
+
+			self.result2.setText(f'{weather_info['location']['localtime']}')
 			
 			self.get_set_image(weather_info)
 			self.result3.setPixmap(self.pixmap.scaled(100, 100))
@@ -127,7 +152,7 @@ class Weather_app(QWidget):
 			message += '\n' + '* Take an umbrella!'
 
 		if weather_info['current']['feelslike_c'] >= 35 and weather_info['current']['condition']['text'] == 'Sunny':
-			message += '\n' + '* Avoid staying in the sun, take a hat for protection' + '\n' + '* Have water on you'
+			message += '\n' + '* Avoid staying in the sun, use a hat' + '\n' + '* Have water on you'
 
 		if weather_info['current']['feelslike_c'] >= 22:
 			message += '\n' + '* Dress lightly (shirt, short pants)'
@@ -141,7 +166,7 @@ class Weather_app(QWidget):
 			message += '\n' + '* Take a jacket'
 
 		if weather_info['current']['feelslike_c'] < 6:
-			message += '\n' + '* Cover with winter coat, beanie, scarf, gloves, boots'
+			message += '\n' + '* Cover with thick winter clothes'
 
 		if weather_info['current']['uv'] >= 3:
 			message += '\n' + '* Use sunscreen'
